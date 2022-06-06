@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t a-marian/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true a-marian/react-test npm test -- --coverage                                                                                                                         bbbb
+
+after_success:
+  - docker build -t a-marian/multi-client ./client
+  - docker build -t a-marian/multi-nginx ./nginx
+  - docker build -t a-marian/multi-server .server
+  - docker build -t a-marian/multi-worker ./worker
+  #log into docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #take those images and push them to docker hub
+  - docker push a-marian/multi-client
+  - docker push a-marian/multi-nginx
+  - docker push a-marian/multi-server
+  - docker push a-marian/multi-worker
